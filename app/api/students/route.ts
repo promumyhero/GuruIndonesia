@@ -49,12 +49,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // Process birth date if provided
+    const studentData = { ...validatedData, teacherId: user.id };
+    
+    if (validatedData.birthDate) {
+      // @ts-ignore - We know birthDate is a valid Date field in the database
+      studentData.birthDate = new Date(validatedData.birthDate);
+    }
+    
     // Create student
     const student = await prisma.student.create({
-      data: {
-        ...validatedData,
-        teacherId: user.id,
-      },
+      data: studentData,
     });
     
     return NextResponse.json(student, { status: 201 });

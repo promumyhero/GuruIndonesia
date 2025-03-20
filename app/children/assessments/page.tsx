@@ -5,6 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClipboardList, FileText } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { SubjectScoreCard, ProgressScoreCard } from "@/app/_components/charts/parent-charts";
 
 export default async function ChildrenAssessmentsPage() {
   const user = await getCurrentUser();
@@ -56,6 +59,60 @@ export default async function ChildrenAssessmentsPage() {
       </div>
     );
   }
+
+  // Prepare data for charts
+  const prepareSubjectChartData = (studentId: string) => {
+    const student = parent?.students?.find(s => s.id === studentId);
+    if (!student) return [];
+
+    // Group assessments by subject
+    const subjectGroups = student.assessments.reduce((acc, assessment) => {
+      const subjectName = assessment.subject.name;
+      if (!acc[subjectName]) {
+        acc[subjectName] = [];
+      }
+      acc[subjectName].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per subject
+    return Object.entries(subjectGroups).map(([subject, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        subject,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    });
+  };
+
+  // Prepare data for daily progress chart
+  const prepareDailyProgressData = (studentId: string) => {
+    const student = parent?.students?.find(s => s.id === studentId);
+    if (!student || student.assessments.length === 0) return [];
+
+    // Group assessments by date
+    const assessmentsByDate = student.assessments.reduce((acc, assessment) => {
+      const date = format(new Date(assessment.createdAt), 'dd MMM', { locale: id });
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per date
+    return Object.entries(assessmentsByDate).map(([date, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        tanggal: date,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    }).slice(-7); // Get last 7 days
+  };
   
   return (
     <div className="container py-10">
@@ -102,6 +159,19 @@ export default async function ChildrenAssessmentsPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {student.assessments.length > 0 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <SubjectScoreCard 
+                  data={prepareSubjectChartData(student.id)} 
+                  studentName={student.name} 
+                />
+                <ProgressScoreCard 
+                  data={prepareDailyProgressData(student.id)} 
+                  studentName={student.name} 
+                />
+              </div>
+            )}
             
             {student.assessments.length > 0 ? (
               (() => {
@@ -155,7 +225,7 @@ export default async function ChildrenAssessmentsPage() {
                                       <td className="py-3 px-4">{assessment.type}</td>
                                       <td className="py-3 px-4 font-medium">{assessment.value}</td>
                                       <td className="py-3 px-4 text-muted-foreground">
-                                        {new Date(assessment.createdAt).toLocaleDateString("id-ID")}
+                                        {format(new Date(assessment.createdAt), 'dd MMM yyyy', { locale: id })}
                                       </td>
                                     </tr>
                                   ))}

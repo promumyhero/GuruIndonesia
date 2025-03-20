@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { studentSchema } from "@/app/lib/validations";
 import { toast } from "sonner";
@@ -24,10 +24,13 @@ export function StudentForm({ initialData }: StudentFormProps = {}) {
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
-    defaultValues: initialData || {
-      name: "",
-      nisn: "",
-      class: "",
+    defaultValues: {
+      name: initialData?.name || "",
+      nisn: initialData?.nisn || "",
+      class: initialData?.class || "",
+      birthDate: initialData?.birthDate 
+        ? new Date(initialData.birthDate).toISOString().split('T')[0] 
+        : "",
     },
   });
 
@@ -103,6 +106,22 @@ export function StudentForm({ initialData }: StudentFormProps = {}) {
               <FormControl>
                 <Input placeholder="Contoh: 10A, 11B, 12C" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="birthDate"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tanggal Lahir</FormLabel>
+              <FormControl>
+                <Input type="date" {...field} />
+              </FormControl>
+              <FormDescription>
+                Tanggal lahir digunakan untuk verifikasi saat orang tua menambahkan anak
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

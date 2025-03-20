@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList, FileText, Bell, BookOpen, GraduationCap } from "lucide-react";
 import { prisma } from "@/app/lib/prisma";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { SubjectBarChart, DailyProgressChart } from "./charts/student-charts";
 
 interface StudentDashboardProps {
   user: {
@@ -74,6 +77,69 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
     },
     take: 5,
   });
+
+  // Get all assessments for charts
+  const allAssessments = await prisma.assessment.findMany({
+    where: { 
+      studentId: student?.id,
+    },
+    include: { 
+      subject: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  
+  // Prepare data for subject chart
+  const prepareSubjectChartData = () => {
+    if (!allAssessments || allAssessments.length === 0) return [];
+
+    // Group assessments by subject
+    const subjectGroups = allAssessments.reduce((acc, assessment) => {
+      const subjectName = assessment.subject.name;
+      if (!acc[subjectName]) {
+        acc[subjectName] = [];
+      }
+      acc[subjectName].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per subject
+    return Object.entries(subjectGroups).map(([subject, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        subject,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    });
+  };
+
+  // Prepare data for daily progress chart
+  const prepareDailyProgressData = () => {
+    if (!allAssessments || allAssessments.length === 0) return [];
+
+    // Group assessments by date
+    const assessmentsByDate = allAssessments.reduce((acc, assessment) => {
+      const date = format(new Date(assessment.createdAt), 'dd MMM', { locale: id });
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per date
+    return Object.entries(assessmentsByDate).map(([date, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        tanggal: date,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    }).slice(-7); // Get last 7 days
+  };
   
   return (
     <>
@@ -169,6 +235,29 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
                   <span className="text-sm font-medium">Wali Kelas:</span>
                   <span className="text-sm">{student?.teacher?.name}</span>
                 </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-8 grid gap-4 md:gap-6 grid-cols-1">
+        <Card className="col-span-1">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold">Perkembangan Nilai</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Nilai Per Mata Pelajaran</h3>
+                <SubjectBarChart data={prepareSubjectChartData()} />
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Perkembangan Nilai Harian</h3>
+                <DailyProgressChart data={prepareDailyProgressData()} />
               </div>
             </div>
           </CardContent>

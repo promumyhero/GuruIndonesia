@@ -9,15 +9,23 @@ import {
   BookOpen, 
   ClipboardList, 
   FileText, 
-  Settings 
+  Settings,
+  GraduationCap,
+  School,
+  Users,
+  Bell
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export function Sidebar({ className, ...props }: SidebarProps) {
   const pathname = usePathname();
+  const user = useCurrentUser();
+  const userRole = user?.role || "";
 
-  const routes = [
+  // Routes for ADMIN and TEACHER
+  const adminTeacherRoutes = [
     {
       label: "Dashboard",
       icon: LayoutDashboard,
@@ -55,6 +63,93 @@ export function Sidebar({ className, ...props }: SidebarProps) {
       active: pathname.startsWith("/settings"),
     },
   ];
+
+  // Routes for PARENT
+  const parentRoutes = [
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+      active: pathname === "/dashboard",
+    },
+    {
+      label: "Anak Saya",
+      icon: GraduationCap,
+      href: "/children",
+      active: pathname.startsWith("/children"),
+    },
+    {
+      label: "Nilai Anak",
+      icon: ClipboardList,
+      href: "/children/assessments",
+      active: pathname.startsWith("/children/assessments"),
+    },
+    {
+      label: "Rapor Anak",
+      icon: FileText,
+      href: "/children/report-cards",
+      active: pathname.startsWith("/children/report-cards"),
+    },
+    {
+      label: "Notifikasi",
+      icon: Bell,
+      href: "/notifications",
+      active: pathname.startsWith("/notifications"),
+    },
+    {
+      label: "Pengaturan",
+      icon: Settings,
+      href: "/settings",
+      active: pathname.startsWith("/settings"),
+    },
+  ];
+
+  // Routes for STUDENT
+  const studentRoutes = [
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      href: "/dashboard",
+      active: pathname === "/dashboard",
+    },
+    {
+      label: "Nilai Saya",
+      icon: ClipboardList,
+      href: "/my-assessments",
+      active: pathname.startsWith("/my-assessments"),
+    },
+    {
+      label: "Rapor Saya",
+      icon: FileText,
+      href: "/my-report-cards",
+      active: pathname.startsWith("/my-report-cards"),
+    },
+    {
+      label: "Mata Pelajaran",
+      icon: BookOpen,
+      href: "/my-subjects",
+      active: pathname.startsWith("/my-subjects"),
+    },
+    {
+      label: "Notifikasi",
+      icon: Bell,
+      href: "/notifications",
+      active: pathname.startsWith("/notifications"),
+    },
+    {
+      label: "Pengaturan",
+      icon: Settings,
+      href: "/settings",
+      active: pathname.startsWith("/settings"),
+    },
+  ];
+
+  // Select routes based on user role
+  const routes = userRole === "ADMIN" || userRole === "TEACHER" 
+    ? adminTeacherRoutes 
+    : userRole === "PARENT" 
+      ? parentRoutes 
+      : studentRoutes;
 
   return (
     <div className={cn("py-4", className)} {...props}>

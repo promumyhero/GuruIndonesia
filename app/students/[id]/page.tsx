@@ -100,6 +100,14 @@ export default async function StudentDetailPage({
                 <dd className="mt-1 text-lg">{student.class}</dd>
               </div>
               <div>
+                <dt className="text-sm font-medium text-gray-500">Tanggal Lahir</dt>
+                <dd className="mt-1 text-lg">
+                  {student.birthDate 
+                    ? formatDate(new Date(student.birthDate)) 
+                    : "Belum diatur"}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-sm font-medium text-gray-500">Tanggal Dibuat</dt>
                 <dd className="mt-1 text-lg">{formatDate(student.createdAt)}</dd>
               </div>

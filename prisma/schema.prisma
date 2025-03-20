@@ -57,6 +57,7 @@ model Student {
   name            String
   nisn            String           @unique
   class           String
+  birthDate       DateTime?        
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   teacher         User             @relation(fields: [teacherId], references: [id])

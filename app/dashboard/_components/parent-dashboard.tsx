@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GraduationCap, FileText, Bell, BookOpen, ClipboardList } from "lucide-react";
+import { GraduationCap, FileText, Bell, BookOpen, ClipboardList, UserPlus } from "lucide-react";
 import { prisma } from "@/app/lib/prisma";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { SubjectBarChart, DailyProgressChart } from "./charts/student-charts";
 
 interface ParentDashboardProps {
   user: {
@@ -27,7 +31,6 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
             orderBy: {
               createdAt: "desc",
             },
-            take: 10,
           },
           reportCards: {
             orderBy: {
@@ -47,6 +50,60 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
   
   // Get all assessments for parent's children
   const allAssessments = parent?.students?.flatMap(student => student.assessments) || [];
+
+  // Prepare data for charts
+  const prepareSubjectChartData = (studentId: string) => {
+    const student = parent?.students?.find(s => s.id === studentId);
+    if (!student) return [];
+
+    // Group assessments by subject
+    const subjectGroups = student.assessments.reduce((acc, assessment) => {
+      const subjectName = assessment.subject.name;
+      if (!acc[subjectName]) {
+        acc[subjectName] = [];
+      }
+      acc[subjectName].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per subject
+    return Object.entries(subjectGroups).map(([subject, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        subject,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    });
+  };
+
+  // Prepare data for daily progress chart
+  const prepareDailyProgressData = (studentId: string) => {
+    const student = parent?.students?.find(s => s.id === studentId);
+    if (!student || student.assessments.length === 0) return [];
+
+    // Group assessments by date
+    const assessmentsByDate = student.assessments.reduce((acc, assessment) => {
+      const date = format(new Date(assessment.createdAt), 'dd MMM', { locale: id });
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+      acc[date].push(assessment);
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Calculate average score per date
+    return Object.entries(assessmentsByDate).map(([date, assessments]) => {
+      const totalScore = assessments.reduce((sum, assessment) => sum + assessment.value, 0);
+      const averageScore = totalScore / assessments.length;
+      
+      return {
+        tanggal: date,
+        nilai: Math.round(averageScore * 10) / 10, // Round to 1 decimal place
+      };
+    }).slice(-7); // Get last 7 days
+  };
   
   return (
     <>
@@ -111,6 +168,88 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
           </CardContent>
         </Card>
       </div>
+      
+      {parent?.students && parent.students.length > 0 && (
+        <div className="mt-8 grid gap-4 md:gap-6 grid-cols-1">
+          <Card className="col-span-1">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-semibold">Perkembangan Nilai Anak</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue={parent.students[0].id} className="w-full">
+                <TabsList className="mb-4">
+                  {parent.students.map((student) => (
+                    <TabsTrigger key={student.id} value={student.id}>
+                      {student.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                
+                {parent.students.map((student) => (
+                  <TabsContent key={student.id} value={student.id} className="space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Nilai Per Mata Pelajaran</h3>
+                        <SubjectBarChart data={prepareSubjectChartData(student.id)} />
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Perkembangan Nilai Harian</h3>
+                        <DailyProgressChart data={prepareDailyProgressData(student.id)} />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Daftar Nilai Terbaru</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full border-collapse">
+                          <thead>
+                            <tr className="bg-muted">
+                              <th className="p-2 text-left font-medium">Mata Pelajaran</th>
+                              <th className="p-2 text-left font-medium">Jenis</th>
+                              <th className="p-2 text-left font-medium">Tanggal</th>
+                              <th className="p-2 text-left font-medium">Nilai</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y">
+                            {student.assessments.slice(0, 5).map((assessment) => (
+                              <tr key={assessment.id} className="hover:bg-muted/50">
+                                <td className="p-2">{assessment.subject.name}</td>
+                                <td className="p-2">{assessment.type}</td>
+                                <td className="p-2">
+                                  {format(new Date(assessment.createdAt), 'dd MMM yyyy', { locale: id })}
+                                </td>
+                                <td className="p-2 font-medium">{assessment.value}</td>
+                              </tr>
+                            ))}
+                            {student.assessments.length === 0 && (
+                              <tr>
+                                <td colSpan={4} className="p-4 text-center text-muted-foreground">
+                                  Belum ada data nilai
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <Link 
+                          href={`/children/${student.id}/assessments`} 
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Lihat semua nilai
+                        </Link>
+                      </div>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       <div className="mt-8 grid gap-4 md:gap-6 grid-cols-1">
         <Card className="col-span-1">
@@ -196,13 +335,20 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
                   </div>
                 ))
               ) : (
-                <div className="flex items-center justify-center h-40">
+                <div className="flex flex-col items-center justify-center h-60 p-6">
                   <div className="text-center">
-                    <GraduationCap className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Belum ada anak terdaftar</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Hubungi pihak sekolah untuk mendaftarkan anak Anda
+                    <GraduationCap className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Belum ada anak terdaftar</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Tambahkan anak Anda untuk melihat perkembangan belajarnya
                     </p>
+                    <Link 
+                      href="/children/add" 
+                      className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                    >
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Tambah Anak
+                    </Link>
                   </div>
                 </div>
               )}

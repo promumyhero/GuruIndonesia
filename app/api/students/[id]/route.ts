@@ -87,7 +87,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     // Update student
     const updatedStudent = await prisma.student.update({
       where: { id },
-      data: validatedData,
+      data: {
+        ...validatedData,
+        // @ts-ignore - We know birthDate is a valid Date field in the database
+        ...(validatedData.birthDate ? { birthDate: new Date(validatedData.birthDate) } : {})
+      },
     });
     
     return NextResponse.json(updatedStudent);

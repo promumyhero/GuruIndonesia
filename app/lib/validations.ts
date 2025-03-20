@@ -19,6 +19,7 @@ export const studentSchema = z.object({
   name: z.string().min(3, "Nama minimal 3 karakter"),
   nisn: z.string().min(10, "NISN minimal 10 karakter").max(10, "NISN maksimal 10 karakter"),
   class: z.string().min(1, "Kelas tidak boleh kosong"),
+  birthDate: z.string().optional(),
   parentIds: z.array(z.string().uuid("ID Orang Tua tidak valid")).optional(),
 });
 

@@ -35,8 +35,28 @@ export default async function ProfilePage() {
             name: true,
             nisn: true,
             class: true,
+            birthDate: true,
           },
         },
+      },
+    });
+  }
+  
+  // Ambil data student jika user adalah student
+  let studentData = null;
+  if (user.role === "STUDENT") {
+    // Cari siswa berdasarkan NISN atau informasi lain yang terkait dengan user
+    studentData = await prisma.student.findFirst({
+      where: {
+        // Asumsi: siswa memiliki NISN yang sama dengan email user sebelum @
+        nisn: user.email.split('@')[0]
+      },
+      select: {
+        id: true,
+        name: true,
+        nisn: true,
+        class: true,
+        birthDate: true,
       },
     });
   }
@@ -53,6 +73,9 @@ export default async function ProfilePage() {
           )}
           {user.role === "PARENT" && (
             <TabsTrigger value="students">Siswa</TabsTrigger>
+          )}
+          {user.role === "STUDENT" && (
+            <TabsTrigger value="student">Siswa</TabsTrigger>
           )}
           <TabsTrigger value="security">Keamanan</TabsTrigger>
         </TabsList>
@@ -119,12 +142,58 @@ export default async function ProfilePage() {
                         <h3 className="font-semibold">{student.name}</h3>
                         <p className="text-sm text-muted-foreground">NISN: {student.nisn}</p>
                         <p className="text-sm text-muted-foreground">Kelas: {student.class}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Tanggal Lahir: {student.birthDate 
+                            ? new Date(student.birthDate).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              }) 
+                            : "Belum diatur"}
+                        </p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">
                     Belum ada siswa yang terhubung dengan akun Anda.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
+        
+        {user.role === "STUDENT" && (
+          <TabsContent value="student">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informasi Siswa</CardTitle>
+                <CardDescription>
+                  Detail informasi siswa Anda
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {studentData ? (
+                  <div className="space-y-4">
+                    <div className="rounded-lg border p-4">
+                      <h3 className="font-semibold">{studentData.name}</h3>
+                      <p className="text-sm text-muted-foreground">NISN: {studentData.nisn}</p>
+                      <p className="text-sm text-muted-foreground">Kelas: {studentData.class}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Tanggal Lahir: {studentData.birthDate 
+                          ? new Date(studentData.birthDate).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }) 
+                          : "Belum diatur"}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Belum ada informasi siswa yang tersedia.
                   </p>
                 )}
               </CardContent>
