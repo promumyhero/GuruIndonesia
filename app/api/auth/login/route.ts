@@ -3,9 +3,25 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/app/lib/prisma";
 import { loginSchema } from "@/app/lib/validations";
 import { signJWT } from "@/app/lib/auth";
+import { School } from "@prisma/client";
 
 // Log the JWT_SECRET (hanya untuk debugging, jangan lakukan ini di production)
 console.log("JWT_SECRET in login route:", process.env.JWT_SECRET ? "exists" : "not found");
+
+// Definisikan tipe untuk userData
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  schoolId: string | null;
+  school?: {
+    id: string;
+    name: string;
+    type: string;
+  };
+  parent?: any;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,14 +32,14 @@ export async function POST(request: NextRequest) {
     const validatedData = loginSchema.parse(body);
     console.log("Validated data:", validatedData);
 
-    // Find user by email
-    const user = await prisma.user.findUnique({
+    // Find user by email (basic info first)
+    const basicUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
 
-    console.log("User found:", !!user);
+    console.log("User found:", !!basicUser);
 
-    if (!user) {
+    if (!basicUser) {
       console.log("User not found");
       return NextResponse.json(
         { error: "Email atau password salah" },
@@ -34,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Compare password
     const passwordMatch = await bcrypt.compare(
       validatedData.password,
-      user.password
+      basicUser.password
     );
 
     console.log("Password match:", passwordMatch);
@@ -47,18 +63,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Now get the full user data with related information based on role
+    const userData: UserData = {
+      id: basicUser.id,
+      name: basicUser.name,
+      email: basicUser.email,
+      role: basicUser.role,
+      schoolId: basicUser.schoolId,
+    };
+
+    // Get additional data based on role
+    if (basicUser.role === "TEACHER" && basicUser.schoolId) {
+      // Get teacher with school info
+      const school = await prisma.school.findUnique({
+        where: { id: basicUser.schoolId },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+        }
+      });
+      
+      if (school) {
+        userData.school = school;
+      }
+    } else if (basicUser.role === "PARENT") {
+      // Get parent with students info
+      const parent = await prisma.parent.findUnique({
+        where: { userId: basicUser.id },
+        include: {
+          students: {
+            select: {
+              id: true,
+              name: true,
+              nisn: true,
+              class: true,
+            },
+          },
+        },
+      });
+      
+      if (parent) {
+        userData.parent = parent;
+      }
+    }
+
     // Create JWT token
     const token = await signJWT({
-      id: user.id,
-      email: user.email,
-      role: user.role,
+      id: basicUser.id,
+      email: basicUser.email,
+      role: basicUser.role,
+      hasSchool: basicUser.role === "TEACHER" ? !!basicUser.schoolId : true,
     });
 
     console.log("JWT token created, length:", token.length);
 
-    // Create response
     const response = NextResponse.json(
-      { user: { id: user.id, name: user.name, email: user.email, role: user.role } },
+      { user: userData },
       { status: 200 }
     );
 

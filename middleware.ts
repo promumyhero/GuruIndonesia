@@ -12,6 +12,14 @@ const publicPaths = [
   "/api/auth/logout",
 ];
 
+// Paths that don't require onboarding check
+const noOnboardingCheckPaths = [
+  "/onboarding",
+  "/api/schools/check",
+  "/api/schools/create",
+  "/api/users/update-school",
+];
+
 // Log the JWT_SECRET (hanya untuk debugging, jangan lakukan ini di production)
 console.log("JWT_SECRET in middleware:", process.env.JWT_SECRET ? "exists" : "not found");
 
@@ -66,6 +74,7 @@ export async function middleware(request: NextRequest) {
     // Verify token
     const payload = await verifyJWT(token);
     console.log("Token payload:", payload ? "valid" : "invalid");
+    console.log("Payload contents:", JSON.stringify(payload));
     
     if (!payload) {
       console.log("Invalid token, redirecting to login");
@@ -73,6 +82,24 @@ export async function middleware(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       return NextResponse.redirect(new URL("/auth/login", request.url));
+    }
+    
+    // Check if user is TEACHER and needs onboarding
+    // Skip this check for onboarding-related paths
+    if (
+      payload.role === "TEACHER" && 
+      !noOnboardingCheckPaths.some(path => pathname === path || pathname.startsWith(path + "/"))
+    ) {
+      // Instead of checking the database, we'll use a claim in the JWT
+      // If hasSchool is false, redirect to onboarding
+      if (!payload.hasSchool) {
+        console.log("Teacher without schoolId, redirecting to onboarding");
+        console.log("hasSchool value:", payload.hasSchool);
+        if (isApiRoute) {
+          return NextResponse.json({ error: "Onboarding required" }, { status: 403 });
+        }
+        return NextResponse.redirect(new URL("/onboarding", request.url));
+      }
     }
     
     // Continue with the request
@@ -91,12 +118,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public (public files)
      */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,9 +14,34 @@ import { toast } from "sonner";
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+interface School {
+  id: string;
+  name: string;
+  type: string;
+}
+
 export function RegisterForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("TEACHER");
+
+  // Fetch schools for teacher registration
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const response = await fetch("/api/schools");
+        if (response.ok) {
+          const data = await response.json();
+          setSchools(data);
+        }
+      } catch (error) {
+        console.error("Error fetching schools:", error);
+      }
+    };
+
+    fetchSchools();
+  }, []);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -27,6 +52,17 @@ export function RegisterForm() {
       role: "TEACHER",
     },
   });
+
+  // Update form when role changes
+  const handleRoleChange = (role: string) => {
+    setSelectedRole(role);
+    form.setValue("role", role as any);
+    
+    // Reset schoolId when role changes
+    if (role !== "TEACHER") {
+      form.setValue("schoolId", undefined);
+    }
+  };
 
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
@@ -103,7 +139,13 @@ export function RegisterForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Peran</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleRoleChange(value);
+                }} 
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih peran" />
@@ -112,12 +154,42 @@ export function RegisterForm() {
                 <SelectContent>
                   <SelectItem value="ADMIN">Admin</SelectItem>
                   <SelectItem value="TEACHER">Guru</SelectItem>
+                  <SelectItem value="PARENT">Orang Tua</SelectItem>
+                  <SelectItem value="STUDENT">Siswa</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {selectedRole === "TEACHER" && (
+          <FormField
+            control={form.control}
+            name="schoolId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sekolah</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih sekolah" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {schools.map((school) => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.name} ({school.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Memproses..." : "Daftar"}
         </Button>

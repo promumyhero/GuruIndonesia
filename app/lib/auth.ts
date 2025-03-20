@@ -14,7 +14,8 @@ export interface JWTPayload {
   id: string;
   email: string;
   role: string;
-  [key: string]: string | number | boolean; // Add index signature for jose compatibility
+  hasSchool?: boolean;
+  [key: string]: string | number | boolean | undefined; // Add index signature for jose compatibility
 }
 
 export async function signJWT(payload: JWTPayload): Promise<string> {
@@ -36,6 +37,7 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
     
     // Verify the JWT using jose
     const { payload } = await jose.jwtVerify(token, secretKey);
+    console.log("JWT verification successful, payload:", JSON.stringify(payload));
     
     // Ensure the payload has the required fields
     if (typeof payload.id !== 'string' || 
