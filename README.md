@@ -1,36 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🇮🇩 Guru Indonesia
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Prisma](https://img.shields.io/badge/Prisma-5.0-2D3748?style=for-the-badge&logo=prisma)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38B2AC?style=for-the-badge&logo=tailwind-css)
 
-First, run the development server:
+Aplikasi manajemen pendidikan komprehensif untuk guru di Indonesia. Dirancang untuk memudahkan guru dalam mengelola data siswa, mata pelajaran, penilaian, dan rapor dengan antarmuka yang modern dan responsif.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Fitur Utama
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Manajemen Siswa**: Tambah, edit, dan hapus data siswa dengan mudah
+- **Manajemen Mata Pelajaran**: Kelola mata pelajaran yang diajarkan
+- **Sistem Penilaian**: Catat dan kelola nilai siswa untuk berbagai jenis penilaian
+- **Pembuatan Rapor**: Buat dan cetak rapor siswa dengan format yang profesional
+- **Pemantauan Kemajuan**: Pantau perkembangan siswa dengan visualisasi data
+- **Responsif**: Tampilan yang optimal di perangkat mobile, tablet, dan desktop
+- **Autentikasi**: Sistem login yang aman untuk melindungi data
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Teknologi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL dengan Prisma ORM
+- **Autentikasi**: JWT dengan bcrypt
+- **UI Components**: Shadcn UI
 
-## Learn More
+## 📋 Prasyarat
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 18.0 atau lebih baru
+- PostgreSQL
+- npm atau yarn
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Instalasi
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Clone repositori:
+   ```bash
+   git clone https://github.com/promumyhero/GuruIndonesia.git
+   cd GuruIndonesia
+   ```
 
-## Deploy on Vercel
+2. Instal dependensi:
+   ```bash
+   npm install
+   # atau
+   yarn install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. Salin file `.env.example` ke `.env` dan isi dengan konfigurasi database:
+   ```
+   DATABASE_URL="postgresql://username:password@localhost:5432/guruindonesia"
+   JWT_SECRET="your-secret-key"
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. Jalankan migrasi database:
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. Jalankan server pengembangan:
+   ```bash
+   npm run dev
+   # atau
+   yarn dev
+   ```
+
+6. Buka [http://localhost:3000](http://localhost:3000) di browser Anda
+
+## 📱 Tampilan Aplikasi
+
+Aplikasi Guru Indonesia memiliki antarmuka yang modern dan responsif:
+
+- **Dashboard**: Ringkasan data dan aktivitas terbaru
+- **Halaman Siswa**: Tampilan kartu untuk mobile dan tabel untuk desktop
+- **Halaman Mata Pelajaran**: Tampilan responsif dengan informasi lengkap
+- **Halaman Penilaian**: Formulir penilaian yang mudah digunakan
+- **Halaman Rapor**: Tampilan rapor yang profesional dengan opsi cetak
+
+## 🤝 Kontribusi
+
+Kontribusi selalu disambut baik! Silakan buat pull request atau buka issue untuk saran dan perbaikan.
+
+## 📄 Lisensi
+
+Proyek ini dilisensikan di bawah [MIT License](LICENSE).
+
+## 📞 Kontak
+
+Untuk pertanyaan atau dukungan, silakan hubungi [ridho@guruindonesia.com](mailto:ridho@guruindonesia.com)
+
+---
+
+Dibuat dengan ❤️ untuk guru-guru Indonesia
