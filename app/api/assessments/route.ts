@@ -8,9 +8,10 @@ const assessmentSchema = z.object({
   studentId: z.string(),
   subjectId: z.string(),
   value: z.number().min(0).max(100),
-  type: z.enum(["WEEKLY", "DAILY", "MIDTERM", "FINAL"]),
+  type: z.enum(["WEEKLY", "DAILY", "MIDTERM", "FINAL", "HOMEWORK", "DAILY_TEST"]),
   semester: z.number().min(1).max(2),
   academicYear: z.string(),
+  assessmentDate: z.string(),
 });
 
 export async function POST(request: Request) {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       data: {
         ...validatedData,
         teacherId: user.id,
+        assessmentDate: new Date(validatedData.assessmentDate),
       },
     });
     
@@ -79,7 +81,7 @@ export async function GET() {
         subject: true,
       },
       orderBy: {
-        createdAt: "desc",
+        assessmentDate: "desc",
       },
     });
     

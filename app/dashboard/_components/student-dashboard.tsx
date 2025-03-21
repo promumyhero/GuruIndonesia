@@ -121,7 +121,7 @@ export async function StudentDashboard({ user }: StudentDashboardProps) {
 
     // Group assessments by date
     const assessmentsByDate = allAssessments.reduce((acc, assessment) => {
-      const date = format(new Date(assessment.createdAt), 'dd MMM', { locale: id });
+      const date = format(new Date(assessment.assessmentDate), 'dd MMM', { locale: id });
       if (!acc[date]) {
         acc[date] = [];
       }

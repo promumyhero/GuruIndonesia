@@ -3,18 +3,55 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "../lib/prisma";
 import { getCurrentUser } from "../lib/auth";
 import { formatDate } from "../lib/utils";
-import { UsersRound, Plus, Eye, Pencil } from "lucide-react";
+import { UsersRound, Plus, Eye, Pencil, Search, Filter } from "lucide-react";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default async function StudentsPage() {
+export default async function StudentsPage({
+  searchParams,
+}: {
+  searchParams?: {
+    search?: string;
+    class?: string;
+  };
+}) {
   const user = await getCurrentUser();
   
   if (!user) {
     return null;
   }
   
-  const students = await prisma.student.findMany({
+  // Menggunakan React.use untuk unwrap Promise dari searchParams di Next.js 15
+  const params = searchParams ? await searchParams : {};
+  const search = params.search || "";
+  const classFilter = params.class || "";
+  
+  // Ambil semua kelas yang dimiliki siswa
+  const classes = await prisma.student.findMany({
     where: { teacherId: user.id },
+    select: { class: true },
+    distinct: ['class'],
+    orderBy: { class: 'asc' }
+  });
+  
+  // Buat kondisi filter
+  const whereCondition: any = { teacherId: user.id };
+  
+  if (search) {
+    whereCondition.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { nisn: { contains: search, mode: 'insensitive' } }
+    ];
+  }
+  
+  if (classFilter) {
+    whereCondition.class = classFilter;
+  }
+  
+  const students = await prisma.student.findMany({
+    where: whereCondition,
     orderBy: { name: "asc" },
   });
   
@@ -34,6 +71,54 @@ export default async function StudentsPage() {
           </Link>
         </Button>
       </div>
+      
+      <Card className="mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Filter Siswa</CardTitle>
+          <CardDescription>Cari dan filter data siswa</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action="/students" method="GET">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  name="search"
+                  placeholder="Cari nama atau NISN"
+                  defaultValue={search}
+                  className="flex-1"
+                />
+              </div>
+              
+              <div>
+                <Select name="class" defaultValue={classFilter || "all"}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih Kelas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Kelas</SelectItem>
+                    {classes.map((c, index) => (
+                      <SelectItem key={index} value={c.class}>
+                        {c.class}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex justify-end">
+                <Button type="reset" variant="outline" className="mr-2">
+                  Reset
+                </Button>
+                <Button type="submit" className="w-full md:w-auto">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filter
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
       
       {/* Card untuk tampilan mobile */}
       <div className="grid grid-cols-1 gap-4 md:hidden">

@@ -49,7 +49,7 @@ export async function GET(
         subject: true
       },
       orderBy: {
-        createdAt: "asc"
+        assessmentDate: "asc"
       }
     });
     
@@ -67,7 +67,7 @@ export async function GET(
         type: assessment.type,
         semester: assessment.semester,
         academicYear: assessment.academicYear,
-        createdAt: assessment.createdAt,
+        assessmentDate: assessment.assessmentDate,
         subjectId: assessment.subjectId,
         subjectName: assessment.subject.name,
         subjectCode: assessment.subject.code
@@ -78,7 +78,7 @@ export async function GET(
     
     // Format data untuk chart
     const chartData = assessments.reduce((data, assessment) => {
-      const date = new Date(assessment.createdAt);
+      const date = new Date(assessment.assessmentDate);
       const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       
       // Cari apakah sudah ada entri untuk bulan ini

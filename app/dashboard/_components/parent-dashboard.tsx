@@ -85,7 +85,7 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
 
     // Group assessments by date
     const assessmentsByDate = student.assessments.reduce((acc, assessment) => {
-      const date = format(new Date(assessment.createdAt), 'dd MMM', { locale: id });
+      const date = format(new Date(assessment.assessmentDate), 'dd MMM', { locale: id });
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -219,7 +219,7 @@ export async function ParentDashboard({ user }: ParentDashboardProps) {
                                 <td className="p-2">{assessment.subject.name}</td>
                                 <td className="p-2">{assessment.type}</td>
                                 <td className="p-2">
-                                  {format(new Date(assessment.createdAt), 'dd MMM yyyy', { locale: id })}
+                                  {format(new Date(assessment.assessmentDate), 'dd MMM yyyy', { locale: id })}
                                 </td>
                                 <td className="p-2 font-medium">{assessment.value}</td>
                               </tr>

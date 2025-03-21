@@ -42,7 +42,7 @@ export function getSemesters(): number[] {
 }
 
 export function getAssessmentTypes(): string[] {
-  return ["WEEKLY", "DAILY", "MIDTERM", "FINAL"];
+  return ["WEEKLY", "DAILY", "MIDTERM", "FINAL", "HOMEWORK", "DAILY_TEST"];
 }
 
 export function getAssessmentTypeLabel(type: string): string {
@@ -55,6 +55,10 @@ export function getAssessmentTypeLabel(type: string): string {
       return "Tengah Semester";
     case "FINAL":
       return "Akhir Semester";
+    case "HOMEWORK":
+      return "Tugas";
+    case "DAILY_TEST":
+      return "Ulangan Harian";
     default:
       return type;
   }

@@ -47,7 +47,7 @@ const formSchema = z.object({
     .number()
     .min(0, "Nilai minimal adalah 0")
     .max(100, "Nilai maksimal adalah 100"),
-  type: z.enum(["WEEKLY", "DAILY", "MIDTERM", "FINAL"], {
+  type: z.enum(["WEEKLY", "DAILY", "MIDTERM", "FINAL", "HOMEWORK", "DAILY_TEST"], {
     required_error: "Silakan pilih tipe penilaian",
   }),
   semester: z.coerce
@@ -56,6 +56,9 @@ const formSchema = z.object({
     .max(2, "Semester maksimal adalah 2"),
   academicYear: z.string({
     required_error: "Silakan masukkan tahun akademik",
+  }),
+  assessmentDate: z.string({
+    required_error: "Silakan pilih tanggal penilaian",
   }),
 })
 
@@ -94,6 +97,7 @@ export default function NewAssessmentPage() {
       value: 0,
       semester: 1,
       academicYear: new Date().getFullYear().toString(),
+      assessmentDate: new Date().toISOString().split('T')[0],
     },
   })
 
@@ -271,6 +275,8 @@ export default function NewAssessmentPage() {
                         <SelectItem value="DAILY">Harian</SelectItem>
                         <SelectItem value="MIDTERM">Tengah Semester</SelectItem>
                         <SelectItem value="FINAL">Akhir Semester</SelectItem>
+                        <SelectItem value="HOMEWORK">Tugas</SelectItem>
+                        <SelectItem value="DAILY_TEST">Ulangan Harian</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -313,7 +319,7 @@ export default function NewAssessmentPage() {
                       <FormLabel>Tahun Akademik</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Contoh: 2024/2025"
+                          placeholder="Contoh: 2023/2024"
                           {...field}
                           disabled={isLoading}
                         />
@@ -323,6 +329,27 @@ export default function NewAssessmentPage() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="assessmentDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tanggal Penilaian</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        disabled={isLoading}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Tanggal kejadian penilaian dilakukan
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <CardFooter className="flex justify-end gap-4 pt-6 border-t px-0">
                 <Button

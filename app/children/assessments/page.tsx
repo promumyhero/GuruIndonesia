@@ -44,7 +44,7 @@ export default async function ChildrenAssessmentsPage() {
             orderBy: [
               { academicYear: "desc" },
               { semester: "desc" },
-              { createdAt: "desc" },
+              { assessmentDate: "desc" },
             ],
           },
         },
@@ -108,7 +108,7 @@ export default async function ChildrenAssessmentsPage() {
 
     // Group assessments by date
     const assessmentsByDate = student.assessments.reduce((acc, assessment) => {
-      const date = format(new Date(assessment.createdAt), "dd MMM", {
+      const date = format(new Date(assessment.assessmentDate), "dd MMM", {
         locale: id,
       });
       if (!acc[date]) {
@@ -321,7 +321,7 @@ export default async function ChildrenAssessmentsPage() {
                                         </td>
                                         <td className="py-3 px-4 text-muted-foreground">
                                           {format(
-                                            new Date(assessment.createdAt),
+                                            new Date(assessment.assessmentDate),
                                             "dd MMM yyyy",
                                             { locale: id }
                                           )}

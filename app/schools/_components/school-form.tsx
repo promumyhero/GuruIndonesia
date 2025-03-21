@@ -78,7 +78,7 @@ export function SchoolForm({ school }: SchoolFormProps) {
       
       <div className="space-y-2">
         <Label htmlFor="type">Tipe Sekolah</Label>
-        <Select name="type" defaultValue={school?.type || ""} required>
+        <Select name="type" defaultValue={school?.type || "SD"} required>
           <SelectTrigger>
             <SelectValue placeholder="Pilih tipe sekolah" />
           </SelectTrigger>

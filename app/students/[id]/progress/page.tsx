@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  LineChart,
+  Line,
+  LabelList,
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +19,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
   Select,
   SelectContent,
@@ -31,7 +38,7 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAssessmentTypeLabel } from "@/lib/utils";
-import { use } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface ProgressPageProps {
   params: Promise<{
@@ -39,49 +46,22 @@ interface ProgressPageProps {
   }>;
 }
 
-// Konfigurasi warna untuk chart - mapel default
-const subjectColors: Record<string, { color: string; label: string }> = {
-  Matematika: { color: "hsl(var(--chart-1))", label: "Matematika" },
-  "Bahasa Indonesia": { color: "hsl(var(--chart-2))", label: "B. Indonesia" },
-  IPA: { color: "hsl(var(--chart-3))", label: "IPA" },
-  IPS: { color: "hsl(var(--chart-4))", label: "IPS" },
-  "Bahasa Inggris": { color: "hsl(var(--chart-5))", label: "B. Inggris" },
-  "Pendidikan Agama": { color: "hsl(var(--primary))", label: "Agama" },
-  PPKN: { color: "hsl(var(--secondary))", label: "PPKN" },
-  "Seni Budaya": { color: "hsl(var(--accent))", label: "Seni Budaya" },
-  PJOK: { color: "hsl(var(--muted))", label: "PJOK" },
-};
-
-// Fungsi untuk mendapatkan warna berdasarkan nama mapel
+// Fungsi untuk mendapatkan warna berdasarkan nama mata pelajaran
 const getSubjectColor = (subjectName: string) => {
-  // Jika mapel sudah ada di daftar default, gunakan warna yang sudah ditentukan
-  if (subjectColors[subjectName]) {
-    return subjectColors[subjectName];
-  }
-
-  // Jika mapel tidak ada di daftar default, buat warna baru berdasarkan indeks
-  // Gunakan chart-1 sampai chart-5 secara berulang
-  const chartColors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
-  ];
-
-  // Buat hash sederhana dari nama mapel untuk mendapatkan indeks yang konsisten
-  const hash = subjectName
-    .split("")
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const colorIndex = hash % chartColors.length;
-
-  return {
-    color: chartColors[colorIndex],
-    label:
-      subjectName.length > 10
-        ? subjectName.substring(0, 10) + "..."
-        : subjectName,
+  const subjectColors: Record<string, { color: string; label: string }> = {
+    Matematika: { color: "#4C51BF", label: "Matematika" },
+    "Bahasa Indonesia": { color: "#ED64A6", label: "B. Indonesia" },
+    "Bahasa Inggris": { color: "#48BB78", label: "B. Inggris" },
+    IPA: { color: "#ECC94B", label: "IPA" },
+    IPS: { color: "#F56565", label: "IPS" },
   };
+
+  return (
+    subjectColors[subjectName] || {
+      color: `hsl(${Math.floor(Math.random() * 360)} 70% 50%)`,
+      label: subjectName,
+    }
+  );
 };
 
 // Fungsi untuk memastikan warna CSS variabel dirender dengan benar
@@ -109,6 +89,128 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [chartData, setChartData] = useState<any[]>([]);
   const [subjectGroups, setSubjectGroups] = useState<Record<string, any[]>>({});
+
+  // Fungsi untuk menghitung nilai rata-rata per bulan
+  interface GroupedData {
+    date: string;
+    month: string;
+    values: number[];
+    count: number;
+  }
+
+  interface AverageData {
+    date: string;
+    month: string;
+    values: number[];
+    count: number;
+    nilai: number;
+    trend: string;
+    [key: string]: any; 
+  }
+
+  const calculateAveragePerMonth = (data: any[]): AverageData[] => {
+    if (!data || data.length === 0) return [];
+
+    // Kelompokkan berdasarkan bulan
+    const groupedByMonth = data.reduce<Record<string, GroupedData>>(
+      (acc, item) => {
+        const date = new Date(item.assessmentDate);
+        const monthYear = `${date.getFullYear()}-${String(
+          date.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+        if (!acc[monthYear]) {
+          acc[monthYear] = {
+            date: `${monthYear}-15`,
+            month: new Date(
+              date.getFullYear(),
+              date.getMonth(),
+              1
+            ).toLocaleString("id-ID", { month: "short" }),
+            values: [],
+            count: 0,
+          };
+        }
+
+        acc[monthYear].values.push(item.value);
+        acc[monthYear].count++;
+
+        return acc;
+      },
+      {}
+    );
+
+    // Hitung rata-rata per bulan
+    const result = Object.values(groupedByMonth).map<AverageData>(
+      (item, index, array) => {
+        const average =
+          item.values.reduce((sum: number, val: number) => sum + val, 0) /
+          item.values.length;
+
+        // Hitung trend jika ada data sebelumnya
+        let trend = 0;
+        if (index > 0) {
+          const prevAverage =
+            array[index - 1].values.reduce(
+              (sum: number, val: number) => sum + val,
+              0
+            ) / array[index - 1].values.length;
+          trend = average - prevAverage;
+        }
+
+        return {
+          ...item,
+          nilai: Math.round(average),
+          trend:
+            trend !== 0
+              ? `${trend > 0 ? "+" : ""}${trend.toFixed(1)}`
+              : "Tetap",
+        };
+      }
+    );
+
+    return result.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  };
+
+  // Fungsi untuk mendapatkan data yang difilter berdasarkan tab aktif
+  const getFilteredData = (): AverageData[] => {
+    if (activeTab === "all") {
+      return calculateAveragePerMonth(Object.values(subjectGroups).flat());
+    }
+
+    return calculateAveragePerMonth(subjectGroups[activeTab] || []);
+  };
+
+  // Fungsi untuk memformat data chart
+  const getChartData = () => {
+    const data = getFilteredData();
+    
+    // Jika tab aktif adalah "all", tambahkan properti untuk setiap mata pelajaran
+    if (activeTab === "all") {
+      // Buat salinan data dengan properti nilai-{subject} untuk setiap mata pelajaran
+      return data.map(item => {
+        const newItem: AverageData = { ...item };
+        Object.keys(chartConfig).forEach(subject => {
+          newItem[`nilai-${subject}`] = item.nilai;
+        });
+        return newItem;
+      });
+    }
+    
+    // Jika tab spesifik, gunakan data asli
+    return data;
+  };
+
+  // Filter data berdasarkan tab aktif (mata pelajaran)
+  const getFilteredSubjects = () => {
+    if (activeTab === "all") return subjectGroups;
+
+    return Object.fromEntries(
+      Object.entries(subjectGroups).filter(([subject]) => subject === activeTab)
+    );
+  };
 
   // Konfigurasi chart berdasarkan mata pelajaran yang ada
   const [chartConfig, setChartConfig] = useState<ChartConfig>({});
@@ -153,43 +255,6 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
       fetchStudentProgress();
     }
   }, [id]);
-
-  // Filter data berdasarkan rentang waktu
-  const getFilteredData = () => {
-    if (!chartData.length) return [];
-
-    const now = new Date();
-    let monthsToShow = 12;
-
-    switch (timeRange) {
-      case "3m":
-        monthsToShow = 3;
-        break;
-      case "6m":
-        monthsToShow = 6;
-        break;
-      case "1y":
-        monthsToShow = 12;
-        break;
-      case "all":
-      default:
-        return chartData;
-    }
-
-    const cutoffDate = new Date(now);
-    cutoffDate.setMonth(now.getMonth() - monthsToShow);
-
-    return chartData.filter((item) => new Date(item.date) >= cutoffDate);
-  };
-
-  // Filter data berdasarkan tab aktif (mata pelajaran)
-  const getFilteredSubjects = () => {
-    if (activeTab === "all") return subjectGroups;
-
-    return Object.fromEntries(
-      Object.entries(subjectGroups).filter(([subject]) => subject === activeTab)
-    );
-  };
 
   // Render loading state
   if (loading) {
@@ -253,7 +318,20 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
           href={`/students/${id}`}
           className="text-sm text-primary hover:underline flex items-center"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m15 18-6-6 6-6"/></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-1"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
           Kembali ke Profil Siswa
         </Link>
       </div>
@@ -264,7 +342,21 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
             <CardHeader className="pb-3">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-primary"
+                  >
+                    <path d="M3 3v18h18" />
+                    <path d="m19 9-5 5-4-4-3 3" />
+                  </svg>
                   <CardTitle>Grafik Perkembangan Nilai</CardTitle>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -292,47 +384,14 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="h-[350px] w-full">
-                {chartData.length > 0 ? (
+                {getFilteredData().length > 0 ? (
                   <ChartContainer config={chartConfig}>
                     <ResponsiveContainer width="100%" height={350}>
-                      <AreaChart
-                        data={getFilteredData()}
+                      <LineChart
+                        data={getChartData()}
                         margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
                       >
-                        <defs>
-                          {Object.entries(chartConfig).map(([key, config]) => {
-                            // Ekstrak nilai warna CSS jika menggunakan variabel CSS
-                            const colorValue =
-                              config.color && config.color.includes("var(--")
-                                ? `var(${
-                                    config.color.match(/var\((.*?)\)/)?.[1]
-                                  }, #3b82f6)`
-                                : config.color || "hsl(var(--primary))";
-
-                            return (
-                              <linearGradient
-                                key={key}
-                                id={`gradient-${key}`}
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                              >
-                                <stop
-                                  offset="0%"
-                                  stopColor={ensureColorVisible(colorValue)}
-                                  stopOpacity={0.6}
-                                />
-                                <stop
-                                  offset="100%"
-                                  stopColor={ensureColorVisible(colorValue)}
-                                  stopOpacity={0.1}
-                                />
-                              </linearGradient>
-                            );
-                          })}
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis
                           dataKey="month"
                           tickLine={false}
@@ -345,18 +404,23 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                           axisLine={false}
                           tickFormatter={(value) => `${value}`}
                         />
-                        <Tooltip
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
+                        <ChartTooltip
+                          cursor={false}
+                          content={(props) => {
+                            if (
+                              props.active &&
+                              props.payload &&
+                              props.payload.length
+                            ) {
                               return (
                                 <div className="rounded-lg border bg-background p-2 shadow-sm">
                                   <div className="grid grid-cols-2 gap-2">
                                     <div className="flex flex-col">
                                       <span className="text-xs font-medium">
-                                        {payload[0]?.payload.month}
+                                        {props.payload[0]?.payload.month}
                                       </span>
                                     </div>
-                                    {payload.map((entry) => (
+                                    {props.payload.map((entry) => (
                                       <div
                                         key={entry.dataKey as string}
                                         className="flex flex-col"
@@ -365,14 +429,13 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                                           <span
                                             className="h-2 w-2 rounded-full"
                                             style={{
-                                              backgroundColor: ensureColorVisible(
-                                                entry.color
-                                              ),
-                                              border: "1px solid rgba(0,0,0,0.1)",
+                                              backgroundColor: entry.color,
+                                              border:
+                                                "1px solid rgba(0,0,0,0.1)",
                                               display: "inline-block",
                                             }}
                                           />
-                                          {entry.dataKey as string}
+                                          {entry.name}
                                         </span>
                                         <span className="font-medium">
                                           {Math.round(entry.value as number)}
@@ -388,23 +451,40 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                         />
                         {Object.entries(chartConfig).map(([key, config]) =>
                           activeTab === "all" || activeTab === key ? (
-                            <Area
+                            <Line
                               key={key}
                               type="monotone"
-                              dataKey={key}
+                              dataKey={activeTab === "all" ? `nilai-${key}` : "nilai"}
+                              name={key}
                               stroke={ensureColorVisible(config.color)}
-                              fill={`url(#gradient-${key})`}
                               strokeWidth={2}
+                              dot={{
+                                r: 4,
+                                strokeWidth: 1,
+                                fill: "white",
+                                stroke: ensureColorVisible(config.color),
+                              }}
                               activeDot={{
                                 r: 6,
-                                strokeWidth: 0,
-                                fill: ensureColorVisible(config.color),
-                                stroke: "white",
+                                strokeWidth: 2,
+                                fill: "white",
+                                stroke: ensureColorVisible(config.color),
                               }}
-                            />
+                            >
+                              <LabelList
+                                dataKey={activeTab === "all" ? `nilai-${key}` : "nilai"}
+                                position="top"
+                                formatter={(value: number | string) =>
+                                  Math.round(value as number)
+                                }
+                                className="fill-foreground"
+                                fontSize={12}
+                                offset={8}
+                              />
+                            </Line>
                           ) : null
                         )}
-                      </AreaChart>
+                      </LineChart>
                     </ResponsiveContainer>
                     <div className="mt-4 flex flex-wrap gap-4">
                       {Object.entries(chartConfig).map(([key, config]) =>
@@ -413,7 +493,9 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                             <div
                               className="h-3 w-3 rounded-full"
                               style={{
-                                backgroundColor: ensureColorVisible(config.color),
+                                backgroundColor: ensureColorVisible(
+                                  config.color
+                                ),
                                 border: "1px solid rgba(0,0,0,0.1)",
                               }}
                             />
@@ -424,10 +506,79 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                         ) : null
                       )}
                     </div>
+                    <CardFooter className="flex-col items-start gap-2 text-sm mt-4 border-t pt-4">
+                      {getChartData().length > 1 ? (
+                        <>
+                          <div className="flex gap-2 font-medium leading-none items-center">
+                            {(() => {
+                              const lastData = getChartData()[getChartData().length - 1];
+                              const prevData = getChartData()[getChartData().length - 2];
+                              const diff = lastData.nilai - prevData.nilai;
+
+                              if (diff > 0) {
+                                return (
+                                  <>
+                                    <span>
+                                      Nilai meningkat {diff.toFixed(1)} poin
+                                    </span>
+                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                  </>
+                                );
+                              } else if (diff < 0) {
+                                return (
+                                  <>
+                                    <span>
+                                      Nilai menurun {Math.abs(diff).toFixed(1)}{" "}
+                                      poin
+                                    </span>
+                                    <TrendingDown className="h-4 w-4 text-red-500" />
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <span>Nilai tetap</span>
+                                    <Minus className="h-4 w-4 text-muted-foreground" />
+                                  </>
+                                );
+                              }
+                            })()}
+                          </div>
+                          <div className="leading-none text-muted-foreground">
+                            Perbandingan nilai{" "}
+                            {
+                              getChartData()[getChartData().length - 2]
+                                .month
+                            }{" "}
+                            dengan{" "}
+                            {
+                              getChartData()[getChartData().length - 1]
+                                .month
+                            }
+                          </div>
+                        </>
+                      ) : getChartData().length === 1 ? (
+                        <>
+                          <div className="flex gap-2 font-medium leading-none">
+                            Nilai rata-rata: {getChartData()[0].nilai}
+                          </div>
+                          <div className="leading-none text-muted-foreground">
+                            Data penilaian bulan {getChartData()[0].month}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="leading-none text-muted-foreground">
+                          Belum ada data penilaian yang cukup untuk menampilkan
+                          trend
+                        </div>
+                      )}
+                    </CardFooter>
                   </ChartContainer>
                 ) : (
                   <div className="flex h-[350px] items-center justify-center">
-                    <p className="text-muted-foreground">Belum ada data penilaian</p>
+                    <p className="text-muted-foreground">
+                      Belum ada data penilaian
+                    </p>
                   </div>
                 )}
               </div>
@@ -490,7 +641,9 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                                         display: "inline-block",
                                       }}
                                     />
-                                    <span>{getSubjectColor(subject).label}</span>
+                                    <span>
+                                      {getSubjectColor(subject).label}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="p-4 align-middle">
@@ -511,7 +664,7 @@ export default function StudentProgressPage({ params }: ProgressPageProps) {
                                 </td>
                                 <td className="p-4 align-middle">
                                   {new Date(
-                                    assessment.createdAt
+                                    assessment.assessmentDate
                                   ).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "short",
