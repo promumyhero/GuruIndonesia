@@ -34,7 +34,7 @@ export default async function MyAssessmentsPage() {
 
   if (!student) {
     return (
-      <div className="container py-10">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <Card>
           <CardHeader>
             <CardTitle>Nilai Saya</CardTitle>
@@ -86,109 +86,115 @@ export default async function MyAssessmentsPage() {
   const sortedYears = Object.keys(groupedAssessments).sort().reverse();
 
   return (
-    <div className="container py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Nilai Saya</h1>
+    <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Nilai Saya</h1>
         <Link
           href="/dashboard"
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary hover:underline flex items-center"
         >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m15 18-6-6 6-6"/></svg>
           Kembali ke Dashboard
         </Link>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Informasi Siswa</CardTitle>
+      <Card className="mb-6 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-primary" />
+            <CardTitle>Informasi Siswa</CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium">Nama:</p>
-              <p className="text-sm">{student.name}</p>
+              <p className="text-sm font-medium text-muted-foreground">Nama</p>
+              <p className="font-medium">{student.name}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">NISN:</p>
-              <p className="text-sm">{student.nisn}</p>
+              <p className="text-sm font-medium text-muted-foreground">NISN</p>
+              <p className="font-medium">{student.nisn}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">Kelas:</p>
-              <p className="text-sm">{student.class}</p>
+              <p className="text-sm font-medium text-muted-foreground">Kelas</p>
+              <p className="font-medium">{student.class}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">Wali Kelas:</p>
-              <p className="text-sm">{student.teacher?.name}</p>
+              <p className="text-sm font-medium text-muted-foreground">Wali Kelas</p>
+              <p className="font-medium">{student.teacher?.name || "-"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {sortedYears.length > 0 ? (
-        sortedYears.map((year) => (
-          <div key={year} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Tahun Ajaran {year}</h2>
-
-            {Object.keys(groupedAssessments[year])
-              .sort()
-              .reverse()
-              .map((semester) => (
-                <Card key={`${year}-${semester}`} className="mb-4">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>Semester {semester}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left py-3 px-4">
-                              Mata Pelajaran
-                            </th>
-                            <th className="text-left py-3 px-4">
-                              Jenis Penilaian
-                            </th>
-                            <th className="text-left py-3 px-4">Nilai</th>
-                            <th className="text-left py-3 px-4">Tanggal</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {groupedAssessments[year][semester].map(
-                            (assessment) => (
-                              <tr key={assessment.id} className="border-b">
-                                <td className="py-3 px-4">
-                                  {assessment.subject.name}
-                                </td>
-                                <td className="py-3 px-4">{assessment.type}</td>
-                                <td className="py-3 px-4 font-medium">
-                                  {assessment.value}
-                                </td>
-                                <td className="py-3 px-4 text-muted-foreground">
-                                  {new Date(
-                                    assessment.createdAt
-                                  ).toLocaleDateString("id-ID")}
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-        ))
+      {sortedYears.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Belum Ada Nilai</CardTitle>
+            <CardDescription>
+              Belum ada data nilai yang tersedia saat ini.
+            </CardDescription>
+          </CardHeader>
+        </Card>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <ClipboardList className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-xl font-medium mb-1">Belum Ada Nilai</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            Anda belum memiliki nilai yang tercatat dalam sistem. Nilai akan
-            muncul setelah guru menginput nilai Anda.
-          </p>
-        </div>
+        sortedYears.map((year) => {
+          const semesters = Object.keys(groupedAssessments[year]).sort();
+          return (
+            <div key={year} className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">Tahun Ajaran {year}</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {semesters.map((semester) => (
+                  <Card key={`${year}-${semester}`} className="shadow-sm">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Semester {semester}</CardTitle>
+                        <span className="text-sm text-muted-foreground">
+                          {groupedAssessments[year][semester].length} nilai
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="rounded-md border overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="bg-muted/50">
+                                <th className="h-10 px-4 text-left font-medium">Mata Pelajaran</th>
+                                <th className="h-10 px-4 text-left font-medium">Tipe</th>
+                                <th className="h-10 px-4 text-left font-medium">Nilai</th>
+                                <th className="h-10 px-4 text-left font-medium">Tanggal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {groupedAssessments[year][semester].map(
+                                (assessment) => (
+                                  <tr key={assessment.id} className="border-b">
+                                    <td className="py-3 px-4">
+                                      {assessment.subject.name}
+                                    </td>
+                                    <td className="py-3 px-4">{assessment.type}</td>
+                                    <td className="py-3 px-4 font-medium">
+                                      {assessment.value}
+                                    </td>
+                                    <td className="py-3 px-4 text-muted-foreground">
+                                      {new Date(
+                                        assessment.createdAt
+                                      ).toLocaleDateString("id-ID")}
+                                    </td>
+                                  </tr>
+                                )
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          );
+        })
       )}
     </div>
   );

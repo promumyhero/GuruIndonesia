@@ -17,59 +17,64 @@ export default async function SettingsPage() {
   }
   
   return (
-    <div className="container p-4 md:p-6">
-      <Breadcrumb items={[{ label: "Pengaturan", href: "/settings" }]} />
-      
-      <div className="flex items-center gap-2 mb-6">
-        <Settings className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl md:text-3xl font-bold">Pengaturan</h1>
+    <div className="container py-10 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div className="flex items-center gap-2 mb-4 sm:mb-0">
+          <Settings className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">Pengaturan</h1>
+        </div>
       </div>
       
       <Tabs defaultValue="account" className="w-full">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="md:w-64 space-y-4">
-            <TabsList className="flex flex-col md:h-auto p-0 bg-transparent space-y-1">
-              <TabsTrigger 
-                value="account" 
-                className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-              >
-                <User className="h-4 w-4 mr-2" />
-                Akun
-              </TabsTrigger>
-              <TabsTrigger 
-                value="password" 
-                className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-              >
-                <Lock className="h-4 w-4 mr-2" />
-                Kata Sandi
-              </TabsTrigger>
-              <TabsTrigger 
-                value="notifications" 
-                className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-              >
-                <Bell className="h-4 w-4 mr-2" />
-                Notifikasi
-              </TabsTrigger>
-              <TabsTrigger 
-                value="privacy" 
-                className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Privasi
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="md:w-64 space-y-2">
+            <Card className="shadow-sm border-2 p-2">
+              <TabsList className="flex flex-col md:h-auto p-0 bg-transparent space-y-1">
+                <TabsTrigger 
+                  value="account" 
+                  className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Akun
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="password" 
+                  className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  Kata Sandi
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="notifications" 
+                  className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifikasi
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="privacy" 
+                  className="w-full justify-start px-3 py-2 h-9 font-normal data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Privasi
+                </TabsTrigger>
+              </TabsList>
+            </Card>
           </div>
           
           <div className="flex-1">
             <TabsContent value="account" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Informasi Akun</CardTitle>
+              <Card className="shadow-sm border-2">
+                <CardHeader className="bg-muted/10">
+                  <CardTitle className="flex items-center">
+                    <User className="h-5 w-5 mr-2 text-primary" />
+                    Informasi Akun
+                  </CardTitle>
                   <CardDescription>
                     Ubah informasi akun Anda di sini.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nama</Label>
                     <Input id="name" defaultValue={user.name || ""} />
@@ -89,21 +94,24 @@ export default async function SettingsPage() {
                     </p>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="bg-muted/5 px-6 py-4 border-t">
                   <Button>Simpan Perubahan</Button>
                 </CardFooter>
               </Card>
             </TabsContent>
             
             <TabsContent value="password" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Ubah Kata Sandi</CardTitle>
+              <Card className="shadow-sm border-2">
+                <CardHeader className="bg-muted/10">
+                  <CardTitle className="flex items-center">
+                    <Lock className="h-5 w-5 mr-2 text-primary" />
+                    Ubah Kata Sandi
+                  </CardTitle>
                   <CardDescription>
                     Ubah kata sandi Anda untuk keamanan akun.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="current-password">Kata Sandi Saat Ini</Label>
                     <Input id="current-password" type="password" />
@@ -117,21 +125,24 @@ export default async function SettingsPage() {
                     <Input id="confirm-password" type="password" />
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="bg-muted/5 px-6 py-4 border-t">
                   <Button>Ubah Kata Sandi</Button>
                 </CardFooter>
               </Card>
             </TabsContent>
             
             <TabsContent value="notifications" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pengaturan Notifikasi</CardTitle>
+              <Card className="shadow-sm border-2">
+                <CardHeader className="bg-muted/10">
+                  <CardTitle className="flex items-center">
+                    <Bell className="h-5 w-5 mr-2 text-primary" />
+                    Pengaturan Notifikasi
+                  </CardTitle>
                   <CardDescription>
                     Atur preferensi notifikasi Anda.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -164,21 +175,24 @@ export default async function SettingsPage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="bg-muted/5 px-6 py-4 border-t">
                   <Button>Simpan Preferensi</Button>
                 </CardFooter>
               </Card>
             </TabsContent>
             
             <TabsContent value="privacy" className="mt-0">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Privasi dan Keamanan</CardTitle>
+              <Card className="shadow-sm border-2">
+                <CardHeader className="bg-muted/10">
+                  <CardTitle className="flex items-center">
+                    <Shield className="h-5 w-5 mr-2 text-primary" />
+                    Privasi dan Keamanan
+                  </CardTitle>
                   <CardDescription>
                     Kelola pengaturan privasi dan keamanan akun Anda.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-6 space-y-4">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
@@ -199,19 +213,9 @@ export default async function SettingsPage() {
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label>Data Penggunaan</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Izinkan kami mengumpulkan data penggunaan untuk meningkatkan layanan.
-                        </p>
-                      </div>
-                      <Switch defaultChecked />
-                    </div>
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="bg-muted/5 px-6 py-4 border-t">
                   <Button>Simpan Pengaturan</Button>
                 </CardFooter>
               </Card>

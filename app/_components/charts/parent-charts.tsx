@@ -51,10 +51,30 @@ export function SubjectScoreCard({ data, studentName }: { data: any[], studentNa
 
   const change = calculateChange();
 
-  const chartConfig = data.reduce((config, item) => {
+  // Fungsi untuk mendapatkan warna chart berdasarkan nama subject dan indeks
+  const getChartColor = (subject: string, index: number) => {
+    const chartColors = [
+      "hsl(var(--chart-1))",
+      "hsl(var(--chart-2))",
+      "hsl(var(--chart-3))",
+      "hsl(var(--chart-4))",
+      "hsl(var(--chart-5))"
+    ];
+    
+    // Buat hash sederhana dari nama subject untuk mendapatkan indeks yang konsisten
+    if (subject) {
+      const hash = subject.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return chartColors[hash % chartColors.length];
+    }
+    
+    // Jika tidak ada subject, gunakan indeks
+    return chartColors[index % chartColors.length];
+  };
+
+  const chartConfig = data.reduce((config, item, index) => {
     config[item.subject] = {
       label: item.subject,
-      color: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`,
+      color: getChartColor(item.subject, index),
     };
     return config;
   }, {} as ChartConfig);
@@ -88,7 +108,7 @@ export function SubjectScoreCard({ data, studentName }: { data: any[], studentNa
               <YAxis domain={[0, 100]} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="nilai" fill="#8884d8" name="Nilai Rata-rata">
+              <Bar dataKey="nilai" fill="hsl(var(--chart-1))" name="Nilai Rata-rata">
                 <LabelList dataKey="nilai" position="top" />
               </Bar>
             </BarChart>

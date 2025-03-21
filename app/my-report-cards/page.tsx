@@ -29,7 +29,7 @@ export default async function MyReportCardsPage() {
   
   if (!student) {
     return (
-      <div className="container py-10">
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <Card>
           <CardHeader>
             <CardTitle>Rapor Saya</CardTitle>
@@ -69,96 +69,112 @@ export default async function MyReportCardsPage() {
   const sortedYears = Object.keys(groupedReportCards).sort().reverse();
   
   return (
-    <div className="container py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Rapor Saya</h1>
-        <Link href="/dashboard" className="text-sm text-primary hover:underline">
+    <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Rapor Saya</h1>
+        <Link
+          href="/dashboard"
+          className="text-sm text-primary hover:underline flex items-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="m15 18-6-6 6-6"/></svg>
           Kembali ke Dashboard
         </Link>
       </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Informasi Siswa</CardTitle>
+
+      <Card className="mb-6 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <CardTitle>Informasi Siswa</CardTitle>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm font-medium">Nama:</p>
-              <p className="text-sm">{student.name}</p>
+              <p className="text-sm font-medium text-muted-foreground">Nama</p>
+              <p className="font-medium">{student.name}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">NISN:</p>
-              <p className="text-sm">{student.nisn}</p>
+              <p className="text-sm font-medium text-muted-foreground">NISN</p>
+              <p className="font-medium">{student.nisn}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">Kelas:</p>
-              <p className="text-sm">{student.class}</p>
+              <p className="text-sm font-medium text-muted-foreground">Kelas</p>
+              <p className="font-medium">{student.class}</p>
             </div>
             <div>
-              <p className="text-sm font-medium">Wali Kelas:</p>
-              <p className="text-sm">{student.teacher?.name}</p>
+              <p className="text-sm font-medium text-muted-foreground">Wali Kelas</p>
+              <p className="font-medium">{student.teacher?.name || "-"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
-      
-      {sortedYears.length > 0 ? (
-        sortedYears.map(year => (
-          <div key={year} className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Tahun Ajaran {year}</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {groupedReportCards[year]
-                .sort((a, b) => parseInt(b.semester.toString()) - parseInt(a.semester.toString()))
-                .map(report => (
-                  <Card key={report.id} className="overflow-hidden">
+
+      {sortedYears.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Belum Ada Rapor</CardTitle>
+            <CardDescription>
+              Belum ada data rapor yang tersedia saat ini.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ) : (
+        sortedYears.map((year) => {
+          const semesters = groupedReportCards[year].map((report) => report.semester).sort((a, b) => parseInt(b.toString()) - parseInt(a.toString()));
+          return (
+            <div key={year} className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">Tahun Ajaran {year}</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {semesters.map((semester) => (
+                  <Card key={`${year}-${semester}`} className="shadow-sm">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Semester {report.semester}</CardTitle>
-                      <CardDescription>
-                        Diperbarui: {new Date(report.updatedAt).toLocaleDateString("id-ID")}
-                      </CardDescription>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">Semester {semester}</CardTitle>
+                      </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-0">
                       <div className="space-y-4">
-                        <div>
-                          <p className="text-sm font-medium">Nilai Akhir:</p>
-                          <p className="text-2xl font-bold">{report.finalGrade}</p>
-                        </div>
-                        
-                        <div>
-                          <p className="text-sm font-medium">Peringkat Kelas:</p>
-                          <p className="text-lg">{report.classRank ? report.classRank : "-"}</p>
-                        </div>
-                        
-                        <div>
-                          <p className="text-sm font-medium">Komentar Guru:</p>
-                          <p className="text-sm mt-1">{report.teacherComment ? report.teacherComment : report.description}</p>
-                        </div>
-                        
-                        <div className="pt-2">
-                          <Button variant="outline" className="w-full" asChild>
-                            <Link href={`/my-report-cards/${report.id}`}>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Lihat Detail Rapor
-                            </Link>
-                          </Button>
-                        </div>
+                        {groupedReportCards[year].filter((reportCard) => reportCard.semester === semester).map((reportCard) => (
+                          <div key={reportCard.id} className="border rounded-md p-4 hover:bg-muted/50 transition-colors">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                              <div className="font-medium">Rapor Semester {reportCard.semester}</div>
+                              <div className="text-sm text-muted-foreground">
+                                Diperbarui: {new Date(reportCard.updatedAt).toLocaleDateString("id-ID")}
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Button asChild size="sm" variant="outline" className="gap-1">
+                                <Link href={`/my-report-cards/${reportCard.id}`}>
+                                  <FileText className="h-4 w-4 mr-1" />
+                                  Lihat Detail Rapor
+                                </Link>
+                              </Button>
+                            </div>
+                            <div className="space-y-4">
+                              <div>
+                                <p className="text-sm font-medium">Nilai Akhir:</p>
+                                <p className="text-2xl font-bold">{reportCard.finalGrade}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">Peringkat Kelas:</p>
+                                <p className="text-lg">{reportCard.classRank ? reportCard.classRank : "-"}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">Komentar Guru:</p>
+                                <p className="text-sm mt-1">{reportCard.teacherComment ? reportCard.teacherComment : reportCard.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>
                 ))}
+              </div>
             </div>
-          </div>
-        ))
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12">
-          <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-xl font-medium mb-1">Belum Ada Rapor</h3>
-          <p className="text-muted-foreground text-center max-w-md">
-            Anda belum memiliki rapor yang tercatat dalam sistem. Rapor akan muncul setelah guru menginput nilai akhir semester Anda.
-          </p>
-        </div>
+          );
+        })
       )}
     </div>
   );

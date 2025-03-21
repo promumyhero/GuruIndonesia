@@ -5,8 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { prisma } from "@/app/lib/prisma";
 import { getCurrentUser } from "@/app/lib/auth";
 import { formatDate } from "@/app/lib/utils";
-import { Breadcrumb } from "@/components/breadcrumb";
-import { PlusIcon, CheckIcon } from "lucide-react";
+import { PlusIcon, CheckIcon, Bell } from "lucide-react";
 
 export default async function NotificationsPage() {
   const user = await getCurrentUser();
@@ -67,17 +66,16 @@ export default async function NotificationsPage() {
   }
   
   return (
-    <div className="container py-6">
-      <div className="flex items-center justify-between mb-6">
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/dashboard" },
-            { label: "Notifikasi", href: "/notifications" },
-          ]}
-        />
+    <div className="container py-6 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div className="flex items-center gap-2 mb-4 sm:mb-0">
+          <Bell className="h-6 w-6 text-primary" />
+          <h1 className="text-3xl font-bold tracking-tight">Notifikasi</h1>
+        </div>
+        
         {(user.role === "ADMIN" || user.role === "TEACHER") && (
           <Link href="/notifications/new">
-            <Button>
+            <Button className="self-start sm:self-auto">
               <PlusIcon className="h-4 w-4 mr-2" />
               Kirim Notifikasi
             </Button>
@@ -85,26 +83,33 @@ export default async function NotificationsPage() {
         )}
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifikasi</CardTitle>
+      <Card className="shadow-sm border-2">
+        <CardHeader className="bg-muted/10">
+          <CardTitle className="flex items-center">
+            <Bell className="h-5 w-5 mr-2 text-primary" />
+            Daftar Notifikasi
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">Belum ada notifikasi.</p>
+            <div className="flex flex-col items-center justify-center py-12 bg-muted/5 rounded-lg border-2 border-dashed">
+              <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-xl font-medium mb-1">Belum Ada Notifikasi</h3>
+              <p className="text-muted-foreground text-center max-w-md px-4">
+                Anda belum memiliki notifikasi. Notifikasi akan muncul di sini.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Judul</TableHead>
-                    <TableHead>Pengirim</TableHead>
-                    {user.role === "ADMIN" && <TableHead>Penerima</TableHead>}
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
+                  <TableRow className="bg-muted/5">
+                    <TableHead className="font-medium">Status</TableHead>
+                    <TableHead className="font-medium">Judul</TableHead>
+                    <TableHead className="font-medium">Pengirim</TableHead>
+                    {user.role === "ADMIN" && <TableHead className="font-medium">Penerima</TableHead>}
+                    <TableHead className="font-medium">Tanggal</TableHead>
+                    <TableHead className="text-right font-medium">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

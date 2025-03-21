@@ -13,6 +13,19 @@ import {
   Line
 } from "recharts";
 
+// Fungsi untuk mendapatkan warna chart berdasarkan nama subject dan indeks
+const getChartColor = (index: number) => {
+  const chartColors = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))"
+  ];
+  
+  return chartColors[index % chartColors.length];
+};
+
 interface SubjectChartProps {
   data: {
     subject: string;
@@ -44,7 +57,7 @@ export function SubjectBarChart({ data }: SubjectChartProps) {
           <YAxis domain={[0, 100]} />
           <Tooltip />
           <Legend />
-          <Bar dataKey="nilai" fill="#8884d8" name="Nilai Rata-rata" />
+          <Bar dataKey="nilai" fill={getChartColor(0)} name="Nilai Rata-rata" />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -79,10 +92,10 @@ export function DailyProgressChart({ data }: DailyProgressProps) {
           <Line 
             type="monotone" 
             dataKey="nilai" 
-            stroke="#82ca9d" 
-            name="Nilai Rata-rata"
+            stroke={getChartColor(1)} 
+            name="Nilai Harian" 
             strokeWidth={2}
-            dot={{ r: 4 }}
+            dot={{ r: 4, fill: getChartColor(1) }}
             activeDot={{ r: 6 }}
           />
         </LineChart>

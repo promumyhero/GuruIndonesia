@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, FileText, ClipboardList, UserPlus } from "lucide-react";
+import { GraduationCap, FileText, ClipboardList, UserPlus, Calendar } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -68,10 +68,10 @@ export default async function ChildrenPage() {
   }
   
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Anak Saya</h1>
-        <Link href="/children/add">
+    <div className="container mx-auto py-10 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <h1 className="text-3xl font-bold tracking-tight mb-4 sm:mb-0">Anak Saya</h1>
+        <Link href="/children/add" className="self-start sm:self-auto">
           <Button>
             <UserPlus className="mr-2 h-4 w-4" />
             Tambah Anak
@@ -81,7 +81,7 @@ export default async function ChildrenPage() {
       
       {parent.students.length > 0 ? (
         <Tabs defaultValue={parent.students[0].id} className="w-full">
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 w-full max-w-md mx-auto grid grid-cols-2 sm:grid-cols-3">
             {parent.students.map((student) => (
               <TabsTrigger key={student.id} value={student.id}>
                 {student.name}
@@ -91,44 +91,38 @@ export default async function ChildrenPage() {
           
           {parent.students.map((student) => (
             <TabsContent key={student.id} value={student.id} className="space-y-8">
-              <Card>
-                <CardHeader>
+              <Card className="shadow-sm border-2">
+                <CardHeader className="bg-muted/10">
                   <CardTitle>Informasi Siswa</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">Nama:</span>
-                        <span>{student.name}</span>
+                    <div className="space-y-4 border-r-0 md:border-r border-dashed pr-0 md:pr-4">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">Nama:</span>
+                        <span className="font-medium">{student.name}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">NISN:</span>
-                        <span>{student.nisn}</span>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">NISN:</span>
+                        <span className="font-medium">{student.nisn}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">Kelas:</span>
-                        <span>{student.class}</span>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">Kelas:</span>
+                        <span className="font-medium">{student.class}</span>
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">Wali Kelas:</span>
-                        <span>{student.teacher?.name || "Belum ditentukan"}</span>
+                    <div className="space-y-4 pt-4 border-t md:border-t-0 md:pt-0">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">Wali Kelas:</span>
+                        <span className="font-medium">{student.teacher?.name || "Belum ditentukan"}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">Tahun Ajaran:</span>
-                        <span>{new Date().getFullYear()}/{new Date().getFullYear() + 1}</span>
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">Tahun Ajaran:</span>
+                        <span className="font-medium">{new Date().getFullYear()}/{new Date().getFullYear() + 1}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 rounded-full bg-primary"></div>
-                        <span className="font-medium">Status:</span>
-                        <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                      <div className="flex flex-col space-y-1">
+                        <span className="text-sm font-medium text-muted-foreground">Status:</span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           Aktif
                         </span>
                       </div>
@@ -137,11 +131,14 @@ export default async function ChildrenPage() {
                 </CardContent>
               </Card>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="shadow-sm">
+                  <CardHeader className="bg-muted/10">
                     <div className="flex items-center justify-between">
-                      <CardTitle>Nilai Terbaru</CardTitle>
+                      <CardTitle className="flex items-center">
+                        <ClipboardList className="h-5 w-5 mr-2 text-primary" />
+                        Nilai Terbaru
+                      </CardTitle>
                       <Link 
                         href={`/children/${student.id}/assessments`} 
                         className="text-sm text-primary hover:underline"
@@ -150,7 +147,7 @@ export default async function ChildrenPage() {
                       </Link>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-5">
                     <div className="space-y-4">
                       {student.assessments.length > 0 ? (
                         student.assessments.map((assessment) => (
@@ -184,10 +181,13 @@ export default async function ChildrenPage() {
                   </CardContent>
                 </Card>
                 
-                <Card>
-                  <CardHeader>
+                <Card className="shadow-sm">
+                  <CardHeader className="bg-muted/10">
                     <div className="flex items-center justify-between">
-                      <CardTitle>Rapor Terbaru</CardTitle>
+                      <CardTitle className="flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-primary" />
+                        Rapor Terbaru
+                      </CardTitle>
                       <Link 
                         href={`/children/${student.id}/report-cards`} 
                         className="text-sm text-primary hover:underline"
@@ -196,7 +196,7 @@ export default async function ChildrenPage() {
                       </Link>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-5">
                     <div className="space-y-4">
                       {student.reportCards.length > 0 ? (
                         student.reportCards.map((report) => (
@@ -233,11 +233,14 @@ export default async function ChildrenPage() {
                 </Card>
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Kehadiran</CardTitle>
+              <Card className="shadow-sm">
+                <CardHeader className="bg-muted/10">
+                  <CardTitle className="flex items-center">
+                    <Calendar className="h-5 w-5 mr-2 text-primary" />
+                    Kehadiran
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-5">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="p-4 rounded-lg border bg-green-50">
                       <div className="text-center">
